@@ -1,0 +1,12 @@
+[submodule "commands"]
+	path = commands
+	url = https://github.com/UserGeneratedLLC/agent-commands.git
+[submodule "skills"]
+	path = skills
+	url = https://github.com/UserGeneratedLLC/agent-skills.git
+[submodule "rules"]
+	path = rules
+	url = https://github.com/UserGeneratedLLC/agent-rules.git
+[submodule "docs"]
+	path = docs
+	url = https://github.com/UserGeneratedLLC/agent-docs.git
