@@ -46,6 +46,7 @@ git submodule add https://github.com/UserGeneratedLLC/agent-rules.git .cursor/ru
 git submodule add https://github.com/UserGeneratedLLC/agent-commands.git .cursor/commands/shared
 git submodule add https://github.com/UserGeneratedLLC/agent-skills.git .cursor/skills/shared
 git submodule add https://github.com/UserGeneratedLLC/agent-docs.git .cursor/docs/shared
+# git config submodule.recurse true
 ```
 
 After cloning a project that already has these submodules, initialize them with:
@@ -54,10 +55,32 @@ After cloning a project that already has these submodules, initialize them with:
 git submodule update --init --recursive
 ```
 
-To pull the latest shared files into your project:
+### Keeping Shared Files Up to Date (Optional)
+
+These are optional convenience setups. Without them, you can always update manually:
 
 ```bash
 git submodule update --remote --merge
+```
+
+**Auto-sync pinned commits on pull** -- run once per project to have `git pull`, `git checkout`, and `git switch` automatically update submodules to the commit your project has pinned:
+
+```bash
+git config submodule.recurse true
+```
+
+**Auto-pull latest from upstream on pull** -- install a post-merge hook that fetches the newest shared content after every pull, even if your project hasn't pinned a newer commit yet:
+
+Bash:
+
+```bash
+printf '#!/bin/sh\ngit submodule update --remote --merge\n' > .git/hooks/post-merge && chmod +x .git/hooks/post-merge
+```
+
+PowerShell:
+
+```powershell
+Set-Content -Path .git/hooks/post-merge -Value "#!/bin/sh`ngit submodule update --remote --merge"
 ```
 
 ## Guidelines for Changes
