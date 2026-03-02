@@ -55,13 +55,15 @@ After cloning a project that already has these submodules, initialize them with:
 git submodule update --init --recursive
 ```
 
-### Keeping Shared Files Up to Date (Optional)
+### Updating to the Latest Versions
 
-These are optional convenience setups. Without them, you can always update manually:
+To pull the latest versions of all shared rules, commands, skills, and docs:
 
 ```bash
-git submodule update --remote --merge
+git submodule update --remote --merge --recursive
 ```
+
+The following are optional convenience setups to automate this:
 
 **Auto-sync pinned commits on pull** -- run once per project to have `git pull`, `git checkout`, and `git switch` automatically update submodules to the commit your project has pinned:
 
@@ -74,13 +76,13 @@ git config submodule.recurse true
 Bash:
 
 ```bash
-printf '#!/bin/sh\ngit submodule update --remote --merge\n' > .git/hooks/post-merge && chmod +x .git/hooks/post-merge
+printf '#!/bin/sh\ngit submodule update --remote --merge --recursive\n' > .git/hooks/post-merge && chmod +x .git/hooks/post-merge
 ```
 
 PowerShell:
 
 ```powershell
-Set-Content -Path .git/hooks/post-merge -Value "#!/bin/sh`ngit submodule update --remote --merge"
+Set-Content -Path .git/hooks/post-merge -Value "#!/bin/sh`ngit submodule update --remote --merge --recursive"
 ```
 
 ## Guidelines for Changes
@@ -101,7 +103,7 @@ When working in this parent repository, remember that each subdirectory is an in
 
 ```bash
 # Update all submodules to latest
-git submodule update --remote --merge
+git submodule update --remote --merge --recursive
 
 # After committing inside a submodule, update the parent reference
 git add <submodule-dir>
