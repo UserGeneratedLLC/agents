@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$AgentsDir     = Join-Path $HOME ".agents"
+$AgentsDir     = Join-Path $HOME ".cursor"
 $UpdateScript  = Join-Path $AgentsDir "update-usergenerated.ps1"
 $TaskName      = "UserGeneratedAgentsUpdate"
 
@@ -60,10 +60,10 @@ function Install {
     $scriptContent = @'
 $ErrorActionPreference = "SilentlyContinue"
 $dirs = @(
-    "$HOME\.agents\rules\usergenerated"
-    "$HOME\.agents\skills\usergenerated"
-    "$HOME\.agents\docs\usergenerated"
-    "$HOME\.agents\commands\usergenerated"
+    "$HOME\.cursor\rules\usergenerated"
+    "$HOME\.cursor\skills\usergenerated"
+    "$HOME\.cursor\docs\usergenerated"
+    "$HOME\.cursor\commands\usergenerated"
 )
 foreach ($dir in $dirs) {
     if (Test-Path (Join-Path $dir ".git")) {

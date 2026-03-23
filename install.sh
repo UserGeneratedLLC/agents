@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-AGENTS_DIR="$HOME/.agents"
+AGENTS_DIR="$HOME/.cursor"
 UPDATE_SCRIPT="$AGENTS_DIR/update-usergenerated.sh"
 CRON_MARKER="# usergenerated-agents-update"
 
@@ -44,10 +44,10 @@ install() {
   cat > "$UPDATE_SCRIPT" << 'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-for dir in "$HOME/.agents/rules/usergenerated" \
-           "$HOME/.agents/skills/usergenerated" \
-           "$HOME/.agents/docs/usergenerated" \
-           "$HOME/.agents/commands/usergenerated"; do
+for dir in "$HOME/.cursor/rules/usergenerated" \
+           "$HOME/.cursor/skills/usergenerated" \
+           "$HOME/.cursor/docs/usergenerated" \
+           "$HOME/.cursor/commands/usergenerated"; do
   [ -d "$dir/.git" ] && git -C "$dir" pull --ff-only 2>/dev/null || true
 done
 EOF
