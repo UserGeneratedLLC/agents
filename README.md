@@ -36,6 +36,29 @@ Repos are cloned to `~/.cursor/{rules,skills,docs,commands}/usergenerated` and u
 ~/.cursor/update-usergenerated.ps1
 ```
 
+## Per-Project Install
+
+To add shared agents to a single project (instead of installing globally), add them as git submodules. Run these from the project root — pick all four or only the ones you need:
+
+```bash
+git submodule add https://github.com/UserGeneratedLLC/agent-rules.git .cursor/rules/usergenerated
+git submodule add https://github.com/UserGeneratedLLC/agent-commands.git .cursor/commands/usergenerated
+git submodule add https://github.com/UserGeneratedLLC/agent-skills.git .cursor/skills/usergenerated
+git submodule add https://github.com/UserGeneratedLLC/agent-docs.git .cursor/docs/usergenerated
+```
+
+After cloning a project that already has these submodules, initialize them:
+
+```bash
+git submodule update --init --recursive
+```
+
+Pull the latest upstream changes for all submodules:
+
+```bash
+git submodule update --remote --merge --recursive
+```
+
 ## Uninstall
 
 macOS / Linux:
