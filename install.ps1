@@ -27,15 +27,33 @@ function Install {
     foreach ($repo in $Repos) {
         $dest = Join-Path $AgentsDir $repo.Name "usergenerated"
 
-        if (Test-Path (Join-Path $dest ".git")) {
-            Write-Host "Updating $($repo.Name)..."
-            git -C $dest pull --ff-only 2>$null
-            if ($LASTEXITCODE -ne 0) { Write-Host "  Warning: pull failed for $($repo.Name), skipping" }
-        } else {
-            Write-Host "Cloning $($repo.Name)..."
-            $parent = Split-Path $dest -Parent
-            New-Item -ItemType Directory -Path $parent -Force | Out-Null
-            git clone --quiet $repo.Url $dest
+        try {
+            if (Test-Path (Join-Path $dest ".git")) {
+                Write-Host "Updating $($repo.Name)..."
+                $ErrorActionPreference = "Continue"
+                git -C $dest pull --ff-only 2>$null
+                $ErrorActionPreference = "Stop"
+                if ($LASTEXITCODE -ne 0) { Write-Host "  Warning: pull failed for $($repo.Name), skipping" }
+            } else {
+                if (Test-Path $dest) {
+                    Write-Host "Repairing $($repo.Name) (removing incomplete clone)..."
+                    Remove-Item -Recurse -Force $dest
+                }
+                Write-Host "Cloning $($repo.Name)..."
+                $parent = Split-Path $dest -Parent
+                New-Item -ItemType Directory -Path $parent -Force | Out-Null
+                $ErrorActionPreference = "Continue"
+                git clone --quiet $repo.Url $dest
+                $ErrorActionPreference = "Stop"
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "  Warning: clone failed for $($repo.Name), skipping"
+                    continue
+                }
+            }
+        } catch {
+            $ErrorActionPreference = "Stop"
+            Write-Host "  Warning: failed to process $($repo.Name): $_"
+            continue
         }
     }
 
@@ -56,13 +74,14 @@ foreach ($dir in $dirs) {
     Set-Content -Path $UpdateScript -Value $scriptContent -Encoding UTF8
     Write-Host "Created update script at $UpdateScript"
 
-    $existing = schtasks /query /tn $TaskName 2>$null
+    $pwsh = if (Get-Command pwsh -ErrorAction SilentlyContinue) { "pwsh.exe" } else { "powershell.exe" }
+    $ErrorActionPreference = "Continue"
+    schtasks /create /tn $TaskName /sc hourly /tr "$pwsh -NoProfile -ExecutionPolicy Bypass -File `"$UpdateScript`"" /f 2>$null | Out-Null
+    $ErrorActionPreference = "Stop"
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "Scheduled task already exists."
+        Write-Host "Installed hourly scheduled task."
     } else {
-        $pwsh = if (Get-Command pwsh -ErrorAction SilentlyContinue) { "pwsh.exe" } else { "powershell.exe" }
-        schtasks /create /tn $TaskName /sc hourly /tr "$pwsh -NoProfile -ExecutionPolicy Bypass -File `"$UpdateScript`"" /f | Out-Null
-        Write-Host "Added hourly scheduled task."
+        Write-Host "Warning: failed to create scheduled task."
     }
 
     Write-Host "Installed to $AgentsDir"
@@ -76,19 +95,25 @@ function Uninstall {
             Remove-Item -Recurse -Force $dest
         }
         $parent = Join-Path $AgentsDir $repo.Name
-        if ((Test-Path $parent) -and -not (Get-ChildItem $parent)) {
-            Remove-Item $parent
-        }
+        try {
+            if ((Test-Path $parent) -and -not (Get-ChildItem -Force $parent)) {
+                Remove-Item -Force $parent
+            }
+        } catch { }
     }
 
     if (Test-Path $UpdateScript) { Remove-Item -Force $UpdateScript }
 
+    $ErrorActionPreference = "Continue"
     schtasks /delete /tn $TaskName /f 2>$null | Out-Null
+    $ErrorActionPreference = "Stop"
     if ($LASTEXITCODE -eq 0) { Write-Host "Removed scheduled task." }
 
-    if ((Test-Path $AgentsDir) -and -not (Get-ChildItem $AgentsDir)) {
-        Remove-Item $AgentsDir
-    }
+    try {
+        if ((Test-Path $AgentsDir) -and -not (Get-ChildItem -Force $AgentsDir)) {
+            Remove-Item -Force $AgentsDir
+        }
+    } catch { }
 
     Write-Host "Uninstalled."
 }

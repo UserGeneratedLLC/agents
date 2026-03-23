@@ -17,6 +17,7 @@ install() {
 
   mkdir -p "$AGENTS_DIR"
 
+  local failed=0
   for entry in "${REPOS[@]}"; do
     name="${entry%%:*}"
     url="${entry#*:}"
@@ -26,9 +27,17 @@ install() {
       echo "Updating $name..."
       git -C "$dest" pull --ff-only 2>/dev/null || echo "  Warning: pull failed for $name, skipping"
     else
+      if [ -d "$dest" ]; then
+        echo "Repairing $name (removing incomplete clone)..."
+        rm -rf "$dest"
+      fi
       echo "Cloning $name..."
       mkdir -p "$(dirname "$dest")"
-      git clone --quiet "$url" "$dest"
+      if ! git clone --quiet "$url" "$dest"; then
+        echo "  Warning: clone failed for $name, skipping" >&2
+        failed=1
+        continue
+      fi
     fi
   done
 
@@ -44,12 +53,15 @@ done
 EOF
   chmod +x "$UPDATE_SCRIPT"
 
-  if crontab -l 2>/dev/null | grep -qF "$CRON_MARKER"; then
-    echo "Cron job already exists."
+  local cron_line="0 * * * * $UPDATE_SCRIPT $CRON_MARKER"
+  local existing
+  existing="$(crontab -l 2>/dev/null | grep -vF "$CRON_MARKER" || true)"
+  if [ -n "$existing" ]; then
+    printf '%s\n%s\n' "$existing" "$cron_line" | crontab -
   else
-    (crontab -l 2>/dev/null || true; echo "0 * * * * $UPDATE_SCRIPT $CRON_MARKER") | crontab -
-    echo "Added hourly cron job."
+    echo "$cron_line" | crontab -
   fi
+  echo "Installed hourly cron job."
 
   echo "Installed to $AGENTS_DIR"
 }
@@ -68,7 +80,13 @@ uninstall() {
   rm -f "$UPDATE_SCRIPT"
 
   if crontab -l 2>/dev/null | grep -qF "$CRON_MARKER"; then
-    crontab -l 2>/dev/null | grep -vF "$CRON_MARKER" | crontab -
+    local remaining
+    remaining="$(crontab -l 2>/dev/null | grep -vF "$CRON_MARKER" || true)"
+    if [ -n "$remaining" ]; then
+      echo "$remaining" | crontab -
+    else
+      crontab -r 2>/dev/null || true
+    fi
     echo "Removed cron job."
   fi
 
