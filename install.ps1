@@ -31,7 +31,8 @@ function Install {
             if (Test-Path (Join-Path $dest ".git")) {
                 Write-Host "Updating $($repo.Name)..."
                 $ErrorActionPreference = "Continue"
-                git -C $dest pull --ff-only 2>$null
+                git -C $dest fetch --depth 1 2>$null
+                if ($LASTEXITCODE -eq 0) { git -C $dest reset --hard origin/HEAD 2>$null }
                 $ErrorActionPreference = "Stop"
                 if ($LASTEXITCODE -ne 0) { Write-Host "  Warning: pull failed for $($repo.Name), skipping" }
             } else {
@@ -43,7 +44,7 @@ function Install {
                 $parent = Split-Path $dest -Parent
                 New-Item -ItemType Directory -Path $parent -Force | Out-Null
                 $ErrorActionPreference = "Continue"
-                git clone --quiet $repo.Url $dest
+                git clone --quiet --depth 1 $repo.Url $dest
                 $ErrorActionPreference = "Stop"
                 if ($LASTEXITCODE -ne 0) {
                     Write-Host "  Warning: clone failed for $($repo.Name), skipping"
@@ -67,7 +68,8 @@ $dirs = @(
 )
 foreach ($dir in $dirs) {
     if (Test-Path (Join-Path $dir ".git")) {
-        git -C $dir pull --ff-only 2>$null
+        git -C $dir fetch --depth 1 2>$null
+        if ($LASTEXITCODE -eq 0) { git -C $dir reset --hard origin/HEAD 2>$null }
     }
 }
 '@

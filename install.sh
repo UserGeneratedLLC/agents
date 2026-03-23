@@ -25,7 +25,7 @@ install() {
 
     if [ -d "$dest/.git" ]; then
       echo "Updating $name..."
-      git -C "$dest" pull --ff-only 2>/dev/null || echo "  Warning: pull failed for $name, skipping"
+      (git -C "$dest" fetch --depth 1 2>/dev/null && git -C "$dest" reset --hard origin/HEAD 2>/dev/null) || echo "  Warning: pull failed for $name, skipping"
     else
       if [ -d "$dest" ]; then
         echo "Repairing $name (removing incomplete clone)..."
@@ -33,7 +33,7 @@ install() {
       fi
       echo "Cloning $name..."
       mkdir -p "$(dirname "$dest")"
-      if ! git clone --quiet "$url" "$dest"; then
+      if ! git clone --quiet --depth 1 "$url" "$dest"; then
         echo "  Warning: clone failed for $name, skipping" >&2
         failed=1
         continue
@@ -48,7 +48,7 @@ for dir in "$HOME/.cursor/rules/usergenerated" \
            "$HOME/.cursor/skills/usergenerated" \
            "$HOME/.cursor/docs/usergenerated" \
            "$HOME/.cursor/commands/usergenerated"; do
-  [ -d "$dir/.git" ] && git -C "$dir" pull --ff-only 2>/dev/null || true
+  [ -d "$dir/.git" ] && git -C "$dir" fetch --depth 1 2>/dev/null && git -C "$dir" reset --hard origin/HEAD 2>/dev/null || true
 done
 EOF
   chmod +x "$UPDATE_SCRIPT"
