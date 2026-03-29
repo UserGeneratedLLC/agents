@@ -26,14 +26,14 @@ Windows (PowerShell):
 iex "& { $(irm https://raw.githubusercontent.com/UserGeneratedLLC/agents/master/install.ps1) }"
 ```
 
-Repos are cloned to `~/.cursor/{rules,skills,docs,commands}/usergenerated` and updated hourly via cron (Linux/macOS) or scheduled task (Windows). Run the update script manually any time:
+Repos are cloned to `.cursor/{rules,skills,docs,commands}/usergenerated` and updated hourly via cron (Linux/macOS) or scheduled task (Windows). Run the update script manually any time:
 
 ```bash
-~/.cursor/update-usergenerated.sh
+.cursor/update-usergenerated.sh
 ```
 
 ```powershell
-~/.cursor/update-usergenerated.ps1
+.cursor/update-usergenerated.ps1
 ```
 
 ## Per-Project Install
